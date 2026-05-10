@@ -9,7 +9,7 @@ import {
   useState
 } from "react";
 
-const defaultTask = "organize Downloads invoices";
+const defaultTask = "整理 Downloads 里的发票";
 type TaskRun = ReturnType<ReturnType<typeof createRuntime>["startTask"]>;
 
 export function App(): ReactElement {
@@ -41,25 +41,25 @@ export function App(): ReactElement {
       createElement(
         "div",
         null,
-        createElement("p", { className: "eyebrow" }, "Desktop automation workspace"),
-        createElement("h1", null, "Local Agent Studio"),
+        createElement("p", { className: "eyebrow" }, "桌面自动化工作台"),
+        createElement("h1", null, "本地智能体工作台"),
         createElement(
           "p",
           { className: "intro" },
-          "Draft plans, inspect approvals, and follow execution activity before local agents touch files or desktop tools."
+          "在本地智能体操作文件或桌面工具前，先审阅计划、风险审批和执行记录。"
         )
       ),
       createElement(
         "div",
-        { className: "status-card", "aria-label": "Current task status" },
-        createElement("span", null, "Status"),
+        { className: "status-card", "aria-label": "当前任务状态" },
+        createElement("span", null, "状态"),
         createElement("strong", null, formatStatus(taskRun.status))
       )
     ),
     createElement(
       "form",
       { className: "task-form", onSubmit: createPlan },
-      createElement("label", { htmlFor: "task" }, "Task"),
+      createElement("label", { htmlFor: "task" }, "任务"),
       createElement("textarea", {
         id: "task",
         value: taskPrompt,
@@ -67,19 +67,19 @@ export function App(): ReactElement {
           setTaskPrompt(event.currentTarget.value),
         rows: 4
       }),
-      createElement("button", { type: "submit" }, "Create Plan")
+      createElement("button", { type: "submit" }, "生成计划")
     ),
     createElement(
       "section",
-      { className: "workspace-grid", "aria-label": "Agent workspace" },
+      { className: "workspace-grid", "aria-label": "智能体工作区" },
       createElement(
         "article",
         { className: "panel" },
         createElement(
           "div",
           { className: "panel-heading" },
-          createElement("h2", null, "Current Plan"),
-          createElement("span", null, `${taskRun.plan.length} steps`)
+          createElement("h2", null, "当前计划"),
+          createElement("span", null, `${taskRun.plan.length} 个步骤`)
         ),
         createElement(
           "ol",
@@ -108,8 +108,8 @@ export function App(): ReactElement {
           createElement(
             "div",
             { className: "panel-heading" },
-            createElement("h2", null, "Approval Queue"),
-            createElement("span", null, `${approvalSteps.length} pending`)
+            createElement("h2", null, "审批队列"),
+            createElement("span", null, `${approvalSteps.length} 项待审批`)
           ),
           approvalSteps.length > 0
             ? createElement(
@@ -120,14 +120,14 @@ export function App(): ReactElement {
                     "li",
                     { key: step.id },
                     createElement("strong", null, step.title),
-                    createElement("span", null, `${step.riskLevel} risk`)
+                    createElement("span", null, `${formatRiskLevel(step.riskLevel)}风险`)
                   )
                 )
               )
             : createElement(
                 "p",
                 { className: "empty-state" },
-                "No approvals required for this plan."
+                "此计划无需审批。"
               )
         )
       ),
@@ -137,8 +137,8 @@ export function App(): ReactElement {
         createElement(
           "div",
           { className: "panel-heading" },
-          createElement("h2", null, "Execution Log"),
-          createElement("span", null, `${taskRun.events.length + 1} entries`)
+          createElement("h2", null, "执行日志"),
+          createElement("span", null, `${taskRun.events.length + 1} 条记录`)
         ),
         createElement(
           "ul",
@@ -151,7 +151,7 @@ export function App(): ReactElement {
               { dateTime: taskRun.createdAt },
               new Date(taskRun.createdAt).toLocaleTimeString()
             ),
-            createElement("span", null, `Created plan for: ${taskRun.userPrompt}`)
+            createElement("span", null, `已为任务生成计划：${taskRun.userPrompt}`)
           ),
           taskRun.events.map((event) =>
             createElement(
@@ -172,8 +172,29 @@ export function App(): ReactElement {
 }
 
 function formatStatus(status: string): string {
-  return status
-    .split("_")
-    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
-    .join(" ");
+  const statusLabels: Record<string, string> = {
+    approved: "已审批",
+    cancelled: "已取消",
+    completed: "已完成",
+    failed: "失败",
+    paused: "已暂停",
+    pending: "待处理",
+    planning: "规划中",
+    running: "执行中",
+    skipped: "已跳过",
+    waiting_approval: "等待审批"
+  };
+
+  return statusLabels[status] ?? status;
+}
+
+function formatRiskLevel(riskLevel: string): string {
+  const riskLabels: Record<string, string> = {
+    low: "低",
+    medium: "中",
+    high: "高",
+    critical: "严重"
+  };
+
+  return riskLabels[riskLevel] ?? riskLevel;
 }

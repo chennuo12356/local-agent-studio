@@ -10,7 +10,7 @@ export function createPluginRegistry(plugins: ToolPlugin[]): PluginRegistry {
 
   for (const plugin of plugins) {
     if (byId.has(plugin.id)) {
-      throw new Error(`Duplicate plugin id: ${plugin.id}`);
+      throw new Error(`插件 id 重复：${plugin.id}`);
     }
 
     byId.set(plugin.id, plugin);

@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createMemoryAuditStore } from "./audit-store";
 
 describe("createMemoryAuditStore", () => {
-  it("stores task events by task id", async () => {
+  it("按任务 id 存储任务事件", async () => {
     const store = createMemoryAuditStore();
     const event = {
       id: "event-1",
       taskId: "task-1",
       type: "audit" as const,
-      message: "created task",
+      message: "已创建任务",
       createdAt: "2026-05-10T00:00:00.000Z"
     };
 
@@ -18,50 +18,50 @@ describe("createMemoryAuditStore", () => {
     expect(await store.listEvents("task-2")).toEqual([]);
   });
 
-  it("snapshots events when they are appended", async () => {
+  it("追加事件时保存快照", async () => {
     const store = createMemoryAuditStore();
     const event = {
       id: "event-1",
       taskId: "task-1",
       type: "audit" as const,
-      message: "created task",
+      message: "已创建任务",
       createdAt: "2026-05-10T00:00:00.000Z"
     };
 
     await store.appendEvent(event);
-    event.message = "mutated after append";
+    event.message = "追加后被修改";
 
     expect(await store.listEvents("task-1")).toEqual([
       {
         id: "event-1",
         taskId: "task-1",
         type: "audit",
-        message: "created task",
+        message: "已创建任务",
         createdAt: "2026-05-10T00:00:00.000Z"
       }
     ]);
   });
 
-  it("returns snapshots of stored events", async () => {
+  it("返回已存储事件的快照", async () => {
     const store = createMemoryAuditStore();
 
     await store.appendEvent({
       id: "event-1",
       taskId: "task-1",
       type: "audit",
-      message: "created task",
+      message: "已创建任务",
       createdAt: "2026-05-10T00:00:00.000Z"
     });
 
     const events = await store.listEvents("task-1");
-    events[0].message = "mutated after list";
+    events[0].message = "列表返回后被修改";
 
     expect(await store.listEvents("task-1")).toEqual([
       {
         id: "event-1",
         taskId: "task-1",
         type: "audit",
-        message: "created task",
+        message: "已创建任务",
         createdAt: "2026-05-10T00:00:00.000Z"
       }
     ]);

@@ -7,42 +7,42 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("agent runtime", () => {
-  it("creates a planning task run with an initial plan", async () => {
+describe("智能体运行时", () => {
+  it("创建带初始计划的规划任务运行记录", async () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.createTask("organize Downloads");
+    const taskRun = runtime.createTask("整理 Downloads");
 
     expect(taskRun.status).toBe("planning");
     expect(taskRun.plan.length).toBeGreaterThan(0);
     expect(taskRun.selectedAgent).toBe("planner");
   });
 
-  it("waits for approval when starting a task with high risk steps", async () => {
+  it("启动包含高风险步骤的任务时等待审批", async () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("organize Downloads invoices");
+    const taskRun = runtime.startTask("整理 Downloads 里的发票");
 
     expect(taskRun.status).toBe("waiting_approval");
   });
 
-  it("completes low and medium risk tasks without approval", async () => {
+  it("无需审批即可完成低风险和中风险任务", async () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("summarize this PDF");
+    const taskRun = runtime.startTask("总结这个 PDF");
 
     expect(taskRun.status).toBe("completed");
   });
 
-  it("uses canonical plugin risk instead of planner-supplied risk", async () => {
+  it("使用插件标准风险等级而非规划器提供的风险等级", async () => {
     vi.doMock("@local-agent/agents", () => ({
       createInitialPlan: (): PlanStep[] => [
         {
           id: "move-files",
-          title: "Move files",
+          title: "移动文件",
           agentId: "file",
           toolCalls: [
             {
@@ -63,7 +63,7 @@ describe("agent runtime", () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("organize Downloads invoices");
+    const taskRun = runtime.startTask("整理 Downloads 里的发票");
 
     expect(taskRun.status).toBe("waiting_approval");
     expect(taskRun.plan[0]).toMatchObject({
@@ -79,12 +79,12 @@ describe("agent runtime", () => {
     });
   });
 
-  it("fails when a planned tool call references an unknown plugin", async () => {
+  it("计划中的工具调用引用未知插件时失败", async () => {
     vi.doMock("@local-agent/agents", () => ({
       createInitialPlan: (): PlanStep[] => [
         {
           id: "unknown-plugin-step",
-          title: "Unknown plugin step",
+          title: "未知插件步骤",
           agentId: "desktop",
           toolCalls: [
             {
@@ -105,17 +105,17 @@ describe("agent runtime", () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("use unknown plugin");
+    const taskRun = runtime.startTask("使用未知插件");
 
     expect(taskRun.status).toBe("failed");
   });
 
-  it("reflects contextual policy approvals into the returned plan", async () => {
+  it("将上下文策略审批结果反映到返回的计划中", async () => {
     vi.doMock("@local-agent/agents", () => ({
       createInitialPlan: (): PlanStep[] => [
         {
           id: "submit-payment",
-          title: "Submit payment",
+          title: "提交付款",
           agentId: "desktop",
           toolCalls: [
             {
@@ -136,7 +136,7 @@ describe("agent runtime", () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("submit payment");
+    const taskRun = runtime.startTask("提交付款");
 
     expect(taskRun.status).toBe("waiting_approval");
     expect(taskRun.plan[0]).toMatchObject({
@@ -152,14 +152,14 @@ describe("agent runtime", () => {
     });
   });
 
-  it("evaluates every planned tool call before deciding status", async () => {
+  it("决定状态前评估每个计划内工具调用", async () => {
     const evaluatedToolCallIds: string[] = [];
 
     vi.doMock("@local-agent/agents", () => ({
       createInitialPlan: (): PlanStep[] => [
         {
           id: "multi-tool-step",
-          title: "Multi tool step",
+          title: "多工具步骤",
           agentId: "file",
           toolCalls: [
             {
@@ -190,7 +190,7 @@ describe("agent runtime", () => {
         return {
           decision:
             toolCall.id === "approval-call" ? "require_approval" : "allow",
-          reason: "test policy decision"
+          reason: "测试策略决策"
         };
       }
     }));
@@ -198,18 +198,18 @@ describe("agent runtime", () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("organize Downloads invoices");
+    const taskRun = runtime.startTask("整理 Downloads 里的发票");
 
     expect(taskRun.status).toBe("waiting_approval");
     expect(evaluatedToolCallIds).toEqual(["approval-call", "allowed-call"]);
   });
 
-  it("fails when any planned tool call is denied by policy", async () => {
+  it("任一计划内工具调用被策略拒绝时失败", async () => {
     vi.doMock("@local-agent/agents", () => ({
       createInitialPlan: (): PlanStep[] => [
         {
           id: "delete-files",
-          title: "Delete files",
+          title: "删除文件",
           agentId: "file",
           toolCalls: [
             {
@@ -230,7 +230,7 @@ describe("agent runtime", () => {
     const { createRuntime } = await import("./runtime");
     const runtime = createRuntime();
 
-    const taskRun = runtime.startTask("delete Downloads");
+    const taskRun = runtime.startTask("删除 Downloads");
 
     expect(taskRun.status).toBe("failed");
   });

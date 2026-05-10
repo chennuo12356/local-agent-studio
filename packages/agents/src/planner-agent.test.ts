@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createInitialPlan, defaultAgentProfiles } from "./index";
 
-describe("planner agent", () => {
-  it("defines the four MVP agents", () => {
+describe("规划智能体", () => {
+  it("定义四个 MVP 智能体", () => {
     expect(defaultAgentProfiles.map((agent) => agent.id)).toEqual([
       "planner",
       "desktop",
@@ -11,27 +11,27 @@ describe("planner agent", () => {
     ]);
   });
 
-  it("routes file organization prompts to the file agent", () => {
-    const plan = createInitialPlan("organize my Downloads invoices");
+  it("将文件整理提示路由到文件智能体", () => {
+    const plan = createInitialPlan("整理 Downloads 里的发票");
 
     expect(plan[0]?.agentId).toBe("file");
     expect(plan.some((step) => step.approvalRequired)).toBe(true);
   });
 
-  it("routes PDF and spreadsheet prompts to the office agent", () => {
-    expect(createInitialPlan("summarize this PDF")[0]?.agentId).toBe("office");
-    expect(createInitialPlan("read this spreadsheet")[0]?.agentId).toBe("office");
+  it("将 PDF 和表格提示路由到办公智能体", () => {
+    expect(createInitialPlan("总结这个 PDF")[0]?.agentId).toBe("office");
+    expect(createInitialPlan("读取这个表格")[0]?.agentId).toBe("office");
   });
 
-  it("routes mixed office and file prompts to the office agent", () => {
-    expect(createInitialPlan("summarize this PDF file")[0]?.agentId).toBe("office");
+  it("将混合办公和文件提示优先路由到办公智能体", () => {
+    expect(createInitialPlan("总结这个 PDF 文件")[0]?.agentId).toBe("office");
   });
 
-  it("does not route file substring false positives to the file agent", () => {
+  it("不会因英文子串误判而路由到文件智能体", () => {
     expect(createInitialPlan("update my profile")[0]?.agentId).toBe("desktop");
   });
 
-  it("routes prompts without agent keywords to the desktop agent", () => {
-    expect(createInitialPlan("open notes app")[0]?.agentId).toBe("desktop");
+  it("将没有智能体关键词的提示路由到桌面智能体", () => {
+    expect(createInitialPlan("打开备忘录应用")[0]?.agentId).toBe("desktop");
   });
 });

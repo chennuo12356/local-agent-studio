@@ -1,8 +1,8 @@
 [package]
 name = "local-agent-desktop"
 version = "0.1.0"
-description = "Local Agent Studio desktop shell"
-authors = ["Local Agent"]
+description = "本地智能体工作台桌面外壳"
+authors = ["本地智能体"]
 edition = "2021"
 build = "build.rs"
 

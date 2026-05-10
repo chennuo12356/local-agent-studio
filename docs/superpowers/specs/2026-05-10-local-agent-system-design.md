@@ -1,144 +1,144 @@
-# Local Agent System Design
+# 本地智能体系统设计
 
-Date: 2026-05-10
+日期：2026-05-10
 
-## Summary
+## 摘要
 
-Build a cross-platform desktop app that acts as a local computer agent platform. The first version uses Tauri 2 as the desktop shell, supports macOS and Windows, and focuses on three useful built-in agents: desktop operation, file organization, and office automation.
+构建一个跨平台桌面应用，作为本地电脑智能体平台。第一版使用 Tauri 2 作为桌面外壳，支持 macOS 和 Windows，聚焦三个实用内置智能体：桌面操作、文件整理和办公自动化。
 
-The system must feel useful to normal users while keeping a platform-grade internal architecture: agent runtime, plugin protocol, policy engine, model router, audit log, and OS adapters.
+系统既要让普通用户觉得可用，也要保留平台级内部架构：智能体运行时、插件协议、策略引擎、模型路由、审计日志和操作系统适配层。
 
-## Goals
+## 目标
 
-- Provide a local desktop app for operating the user's computer.
-- Support macOS and Windows in the first version.
-- Use cloud model APIs as the primary AI backend.
-- Support multi-model routing so different agents and tasks can use different models.
-- Allow screen capture and screen understanding by default.
-- Allow data to be sent to cloud models by default, with clear privacy disclosure.
-- Use risk-based approvals for sensitive actions.
-- Deliver a first version with a real platform core and three usable workflows.
+- 提供可操作用户电脑的本地桌面应用。
+- 第一版支持 macOS 和 Windows。
+- 以云端模型 API 作为主要 AI 后端。
+- 支持多模型路由，让不同智能体和任务使用不同模型。
+- 默认支持屏幕截图和屏幕理解。
+- 默认允许向云端模型发送数据，但必须有清晰的隐私披露。
+- 对敏感操作采用基于风险的审批。
+- 第一版交付真实的平台核心和三个可用工作流。
 
-## Non-Goals For MVP
+## MVP 不做
 
-- Plugin marketplace.
-- Team collaboration.
-- Enterprise admin console.
-- Remote computer control.
-- Local model support.
-- Fully autonomous high-risk actions.
-- Automatic password or verification-code entry.
-- Payment, purchase, legal, financial, medical, or government-form automation.
+- 插件市场。
+- 团队协作。
+- 企业管理控制台。
+- 远程控制电脑。
+- 本地模型支持。
+- 完全自主执行高风险操作。
+- 自动输入密码或验证码。
+- 支付、购买、法律、金融、医疗或政府表单自动化。
 
-## Product Shape
+## 产品形态
 
-The product is a desktop app, not just a chat window. The main screen is a task console with:
+产品是桌面应用，不只是聊天窗口。主界面是任务控制台，包含：
 
-- Task input.
-- Current plan.
-- Approval queue.
-- Real-time execution log.
-- Result artifacts.
-- Task history.
-- Settings for model keys, privacy, permissions, and risk controls.
+- 任务输入。
+- 当前计划。
+- 审批队列。
+- 实时执行日志。
+- 结果产物。
+- 任务历史。
+- 模型密钥、隐私、权限和风险控制设置。
 
-The user flow is:
+典型用户流程：
 
-1. User enters a task, such as "organize invoices and contracts in Downloads."
-2. The system selects an agent and, when needed, asks the Planner Agent to create steps.
-3. The app shows what it will read, what it may change, and what may be sent to cloud models.
-4. Low-risk actions run automatically.
-5. High-risk and critical actions enter the approval queue.
-6. Approved actions execute with visible progress, logs, screenshots, and file changes.
-7. The task ends with a summary, artifacts, failed or skipped items, cloud-data disclosure, and rollback options.
+1. 用户输入任务，例如“整理 Downloads 里的发票和合同”。
+2. 系统选择智能体，必要时由规划智能体创建步骤。
+3. 应用展示将读取什么、可能修改什么，以及哪些数据可能发送给云端模型。
+4. 低风险操作自动执行。
+5. 高风险和严重风险操作进入审批队列。
+6. 已审批操作在可见进度、日志、截图和文件变更记录下执行。
+7. 任务结束时展示摘要、产物、失败或跳过项、云端数据披露和回滚选项。
 
-The first version should not be fully autonomous. It should behave like assisted execution: AI can act, but the user can always inspect plan, risk, and result.
+第一版不应完全自主。它应该像辅助执行工具：AI 可以行动，但用户始终能检查计划、风险和结果。
 
-## Recommended Approach
+## 推荐方案
 
-Use a hybrid approach: build a minimal but complete platform core and validate it with three built-in workflows.
+采用混合方案：先构建最小但完整的平台核心，并用三个内置工作流验证。
 
-The three built-in agents are:
+内置智能体：
 
-- Desktop Agent: reads the screen, clicks, types, and operates apps.
-- File Agent: scans, classifies, moves, renames, and archives files.
-- Office Agent: handles PDFs, spreadsheets, email drafts, summaries, and meeting notes.
+- 桌面智能体：读取屏幕、点击、输入并操作应用。
+- 文件智能体：扫描、分类、移动、重命名和归档文件。
+- 办公智能体：处理 PDF、表格、邮件草稿、摘要和会议记录。
 
-Each agent should complete at least one end-to-end workflow in MVP.
+MVP 中每个智能体至少完成一个端到端工作流。
 
-## Architecture
+## 架构
 
-Use Tauri 2 as the desktop shell. Keep the long-term platform capabilities in a local Agent Runtime.
+使用 Tauri 2 作为桌面外壳，将长期平台能力放在本地 Agent Runtime 中。
 
 ```text
-Desktop App
+桌面应用
   ↓
-Task Console / Approval UI
+任务控制台 / 审批界面
   ↓
 Agent Runtime
   ↓
-Planner + Policy Engine + Model Router
+规划器 + 策略引擎 + 模型路由
   ↓
-Tool Plugins
+工具插件
   ↓
-OS Adapters / Local Resources / Cloud Models
+操作系统适配层 / 本地资源 / 云端模型
 ```
 
-### Desktop App
+### 桌面应用
 
-The desktop app owns user interaction:
+桌面应用负责用户交互：
 
-- Task entry.
-- Plan display.
-- Approval dialogs and approval queue.
-- Execution log.
-- Task history.
-- Settings.
+- 任务输入。
+- 计划展示。
+- 审批弹窗和审批队列。
+- 执行日志。
+- 任务历史。
+- 设置。
 
-Use Tauri 2 with a React and TypeScript frontend. Tauri gives a smaller app footprint and a cleaner native boundary than Electron. Use Rust for local OS integration where it provides stronger boundaries or better platform APIs.
+前端使用 React 和 TypeScript。Tauri 相比 Electron 有更小的应用体积和更清晰的原生边界。涉及本地操作系统集成时，使用 Rust 提供更强边界和更好的平台 API 接入。
 
 ### Agent Runtime
 
-The runtime owns task lifecycle and execution state. It should not contain feature-specific business logic. It coordinates agents, plugins, policy checks, approvals, persistence, cancellation, and recovery.
+运行时负责任务生命周期和执行状态，不包含特定功能的业务逻辑。它协调智能体、插件、策略检查、审批、持久化、取消和恢复。
 
-All system actions must go through the runtime. Agents cannot call OS APIs directly.
+所有系统动作都必须经过运行时。智能体不能直接调用操作系统 API。
 
-### Planner
+### 规划器
 
-The Planner turns user tasks into executable steps. For example, "organize Downloads" becomes:
+规划器将用户任务转换为可执行步骤。例如“整理 Downloads”会变成：
 
-1. Scan selected directory.
-2. Classify files.
-3. Generate proposed moves and renames.
-4. Ask for approval.
-5. Execute approved actions.
-6. Produce a report.
+1. 扫描选定目录。
+2. 分类文件。
+3. 生成移动和重命名建议。
+4. 请求审批。
+5. 执行已审批动作。
+6. 生成报告。
 
-### Policy Engine
+### 策略引擎
 
-The Policy Engine evaluates every plugin call before execution. It decides whether to allow, require approval, deny, or escalate.
+策略引擎在每次插件调用前执行评估，决定允许、要求审批、拒绝或升级。
 
-The MVP policy model is risk-based:
+MVP 风险模型：
 
-- Low: automatic.
-- Medium: automatic by default, visible in logs.
-- High: requires approval.
-- Critical: requires explicit confirmation or is disabled in MVP.
+- 低风险：自动执行。
+- 中风险：默认自动执行，但在日志中可见。
+- 高风险：需要审批。
+- 严重风险：需要明确确认，或在 MVP 中禁用。
 
-### Model Router
+### 模型路由
 
-Cloud model APIs are the primary backend. The router selects models by task type:
+云端模型 API 是主要后端。路由器按任务类型选择模型：
 
-- Strong reasoning model for planning.
-- Fast inexpensive model for routine text tasks.
-- Multimodal model for screenshots and visual understanding.
-- Specialized model when an agent profile asks for one.
+- 强推理模型用于规划。
+- 快速低成本模型用于常规文本任务。
+- 多模态模型用于截图和视觉理解。
+- 智能体配置指定时使用专用模型。
 
-The interface must allow future model providers without changing agents.
+接口必须允许未来新增模型供应商，而不需要修改智能体。
 
-### Tool Plugins
+### 工具插件
 
-All capabilities are plugins. Example plugins:
+所有能力都以插件形式提供。例如：
 
 - `screen.capture`
 - `screen.locate`
@@ -157,50 +157,50 @@ All capabilities are plugins. Example plugins:
 - `spreadsheet.read`
 - `email.draft`
 
-Plugins declare permissions, risk level, schema, and reversibility.
+插件声明权限、风险等级、输入输出 schema 和可逆性。
 
-### OS Adapters
+### 操作系统适配层
 
-OS adapters hide macOS and Windows differences. Plugins call adapters rather than direct platform APIs.
+适配层屏蔽 macOS 和 Windows 差异。插件调用适配层，而不是直接调用平台 API。
 
-Examples:
+示例能力：
 
-- Screenshot capture.
-- Accessibility permissions.
-- Window listing.
-- Window focus.
-- Mouse and keyboard control.
-- File system watches.
-- App launch.
+- 截图。
+- 辅助功能权限。
+- 窗口列表。
+- 窗口聚焦。
+- 鼠标和键盘控制。
+- 文件系统监听。
+- 应用启动。
 
-## Suggested Repository Layout
+## 建议仓库结构
 
 ```text
-local-agent-studio/
+local-agent/
   apps/
-    desktop/              # Tauri 2 desktop app
+    desktop/              # Tauri 2 桌面应用
   packages/
     runtime/              # Agent Runtime
-    agents/               # Built-in agents
-    plugins/              # Tool plugins
-    policy/               # Permission and approval logic
-    model-router/         # Multi-model routing
-    os-adapters/          # macOS / Windows adapters
-    shared/               # Types, events, schemas
+    agents/               # 内置智能体
+    plugins/              # 工具插件
+    policy/               # 权限和审批逻辑
+    model-router/         # 多模型路由
+    os-adapters/          # macOS / Windows 适配层
+    shared/               # 类型、事件、schema
 ```
 
-## Agent Model
+## 智能体模型
 
-Agents plan, decide, and request tool calls. They do not operate the system directly.
+智能体负责规划、决策和请求工具调用，但不直接操作系统。
 
-MVP agents:
+MVP 智能体：
 
-- Planner Agent: default entry, task understanding, decomposition, routing.
-- Desktop Agent: screen reading, clicking, typing, app operation.
-- File Agent: scanning, classification, moving, renaming, archiving.
-- Office Agent: PDF, spreadsheet, email draft, summary, meeting-note tasks.
+- 规划智能体：默认入口，理解任务、拆解步骤和路由工作。
+- 桌面智能体：屏幕读取、点击、输入和应用操作。
+- 文件智能体：扫描、分类、移动、重命名和归档。
+- 办公智能体：PDF、表格、邮件草稿、摘要和会议记录任务。
 
-Agent profile:
+智能体配置：
 
 ```ts
 type AgentProfile = {
@@ -213,9 +213,9 @@ type AgentProfile = {
 };
 ```
 
-## Plugin Model
+## 插件模型
 
-Plugin metadata:
+插件元数据：
 
 ```ts
 type ToolPlugin = {
@@ -230,47 +230,45 @@ type ToolPlugin = {
 };
 ```
 
-Baseline risk examples:
+基线风险示例：
 
 ```text
-file.scan        low       automatic
-file.read        medium    automatic for normal paths; approval for sensitive paths
-file.move        high      approval required; reversible
-file.rename      high      approval required; reversible
-file.delete      critical  disabled in MVP
-mouse.click      medium    contextual risk evaluation
-keyboard.type    medium    contextual risk evaluation
-email.draft      medium    creates drafts only
-email.send       critical  disabled in MVP
-shell.exec       critical  disabled in MVP
+file.scan        low       自动执行
+file.read        medium    普通路径自动执行；敏感路径需要审批
+file.move        high      需要审批；可回滚
+file.rename      high      需要审批；可回滚
+file.delete      critical  MVP 中禁用
+mouse.click      medium    根据上下文评估风险
+keyboard.type    medium    根据上下文评估风险
+email.draft      medium    仅创建草稿
+email.send       critical  MVP 中禁用
+shell.exec       critical  MVP 中禁用
 ```
 
-## Permission And Approval Model
+## 权限和审批模型
 
-Use risk-based approvals.
-
-Approval dialog content must include:
+审批弹窗必须包含足够上下文：
 
 ```text
-Agent: File Agent
-Action: Move 38 files
-Source: ~/Downloads
-Destination: ~/Documents/Invoices/2026
-Risk: High
-Reversible: Yes
-Cloud data: file names and partial PDF text summaries
+智能体：文件智能体
+动作：移动 38 个文件
+来源：~/Downloads
+目标：~/Documents/Invoices/2026
+风险：高
+可回滚：是
+云端数据：文件名和部分 PDF 文本摘要
 ```
 
-MVP policy rules:
+MVP 策略规则：
 
-- Low-risk calls execute automatically.
-- Medium-risk calls execute automatically but are visible in the log.
-- High-risk calls require approval.
-- Critical calls require explicit confirmation or are disabled.
-- Password and verification-code fields are denied for automatic typing.
-- Permanent deletion, email sending, shell execution, and payment-related actions are disabled in MVP.
+- 低风险调用自动执行。
+- 中风险调用自动执行，但在日志中可见。
+- 高风险调用需要审批。
+- 严重风险调用需要明确确认或被禁用。
+- 密码和验证码字段拒绝自动输入。
+- 永久删除、发送邮件、执行 shell 和支付相关动作在 MVP 中禁用。
 
-The policy engine should support rule files for future configuration:
+策略引擎应支持未来通过规则文件配置：
 
 ```yaml
 rules:
@@ -286,25 +284,25 @@ rules:
     decision: allow
 ```
 
-## Desktop Operation Flow
+## 桌面操作流程
 
-Desktop control follows observe, plan, execute, verify:
+桌面控制遵循观察、规划、执行、验证：
 
 ```text
-Screenshot / window metadata
+截图 / 窗口元数据
   ↓
-Visual model interpretation
+视觉模型理解
   ↓
-Next action proposal
+下一步动作建议
   ↓
-Policy check
+策略检查
   ↓
-Mouse / keyboard execution
+鼠标 / 键盘执行
   ↓
-Post-action screenshot verification
+操作后截图验证
 ```
 
-MVP supported actions:
+MVP 支持的动作：
 
 - `screen.capture`
 - `screen.locate`
@@ -317,39 +315,39 @@ MVP supported actions:
 - `keyboard.hotkey`
 - `clipboard.set`
 
-MVP forbidden actions:
+MVP 禁止的动作：
 
-- Auto-entering passwords.
-- Auto-entering verification codes.
-- Completing payments.
-- Submitting legal, financial, medical, or government forms.
-- Background control of invisible windows.
-- Bypassing OS permission systems.
+- 自动输入密码。
+- 自动输入验证码。
+- 完成支付。
+- 提交法律、金融、医疗或政府表单。
+- 后台控制不可见窗口。
+- 绕过操作系统权限机制。
 
-Contextual risk triggers include buttons or labels such as:
+敏感上下文触发词包括：
 
 ```text
 Send, Submit, Delete, Pay, Confirm, Purchase, Authorize, Install
 发送, 提交, 删除, 付款, 确认, 购买, 授权, 安装
 ```
 
-Those actions require approval or denial depending on context.
+这些动作根据上下文需要审批或拒绝。
 
-Each desktop step records:
+每个桌面步骤记录：
 
-- Before screenshot.
-- Target element.
-- Action type.
-- Input summary.
-- Expected result.
-- Risk level.
-- Approval state.
-- After screenshot.
-- Verification result.
+- 操作前截图。
+- 目标元素。
+- 动作类型。
+- 输入摘要。
+- 预期结果。
+- 风险等级。
+- 审批状态。
+- 操作后截图。
+- 验证结果。
 
-## Data Flow
+## 数据流
 
-Task execution is tracked as a structured run:
+任务执行以结构化运行记录跟踪：
 
 ```ts
 type TaskRun = {
@@ -372,7 +370,7 @@ type TaskRun = {
 };
 ```
 
-Plan step:
+计划步骤：
 
 ```ts
 type PlanStep = {
@@ -392,17 +390,17 @@ type PlanStep = {
 };
 ```
 
-## Logging And Persistence
+## 日志和持久化
 
-Use three log layers:
+使用三层日志：
 
-- User log: concise progress and results.
-- Audit log: structured record of agents, plugins, approvals, input/output summaries, and timestamps.
-- Debug log: model request metadata, tool returns, stack traces, locator data.
+- 用户日志：简洁的进度和结果。
+- 审计日志：智能体、插件、审批、输入输出摘要和时间戳的结构化记录。
+- 调试日志：模型请求元数据、工具返回、堆栈跟踪和定位数据。
 
-Store audit logs in local SQLite. Store screenshots and intermediate files as artifacts on disk, referenced by path and hash from SQLite.
+审计日志存储在本地 SQLite。截图和中间文件作为磁盘产物保存，并通过 SQLite 记录路径和哈希。
 
-macOS:
+macOS：
 
 ```text
 ~/Library/Application Support/LocalAgentStudio/
@@ -415,74 +413,74 @@ macOS:
       report.md
 ```
 
-Windows:
+Windows：
 
 ```text
 %APPDATA%/LocalAgentStudio/
 ```
 
-Do not save full model prompts by default. Store model-call summaries:
+默认不保存完整模型提示词，只保存模型调用摘要：
 
-- Model name.
-- Purpose.
-- Data categories sent.
-- Whether file body or screenshots were included.
-- Timestamp.
+- 模型名称。
+- 调用目的。
+- 发送的数据类别。
+- 是否包含文件正文或截图。
+- 时间戳。
 
-Developer mode may optionally store full prompts for debugging.
+开发者模式可以选择保存完整提示词用于调试。
 
-## Error Recovery
+## 错误恢复
 
-Handle four error classes:
+处理四类错误：
 
-1. Model understanding error: verify with post-action screenshot, pause, show expected versus actual, ask for retry or user takeover.
-2. OS permission error: guide the user to grant permissions, stop blind retries.
-3. Tool execution error: record the exact error, skip affected item or ask user.
-4. Approval rejection: re-plan where possible, such as creating an email draft instead of sending.
+1. 模型理解错误：用操作后截图验证，暂停，展示预期与实际差异，并询问重试或用户接管。
+2. 操作系统权限错误：引导用户授予权限，停止盲目重试。
+3. 工具执行错误：记录精确错误，跳过受影响项或询问用户。
+4. 审批拒绝：尽可能重新规划，例如创建邮件草稿而不是发送邮件。
 
-Users can pause, cancel, or request rollback for reversible actions.
+用户可以暂停、取消或请求回滚可逆操作。
 
-Rollback applies only to plugins marked `reversible: true`. Irreversible actions require approval before execution and only provide audit records afterward.
+回滚只适用于标记为 `reversible: true` 的插件。不可逆操作执行前必须审批，执行后只提供审计记录。
 
-## Result Summary
+## 结果摘要
 
-Every task ends with a summary:
+每个任务结束时展示：
 
-- What was completed.
-- Which files or app states changed.
-- Which actions required approval.
-- What data was sent to cloud models.
-- What failed or was skipped.
-- Which actions can be rolled back.
-- Artifact links.
+- 已完成内容。
+- 哪些文件或应用状态发生变化。
+- 哪些动作需要审批。
+- 哪些数据发送给云端模型。
+- 哪些步骤失败或跳过。
+- 哪些动作可以回滚。
+- 产物链接。
 
-## MVP Scope
+## MVP 范围
 
-### Required
+### 必须包含
 
-Desktop app:
+桌面应用：
 
-- Task input.
-- Plan display.
-- Approval dialogs and queue.
-- Real-time execution log.
-- Task history.
-- Settings for model API keys, privacy, and permissions.
+- 任务输入。
+- 计划展示。
+- 审批弹窗和队列。
+- 实时执行日志。
+- 任务历史。
+- 模型 API 密钥、隐私和权限设置。
 
-Runtime:
+运行时：
 
-- Task lifecycle management.
-- Planner Agent.
-- Desktop Agent.
-- File Agent.
-- Office Agent.
-- Plugin protocol.
-- Policy Engine.
-- Model Router.
-- SQLite audit log.
-- Artifact storage.
+- 任务生命周期管理。
+- 规划智能体。
+- 桌面智能体。
+- 文件智能体。
+- 办公智能体。
+- 插件协议。
+- 策略引擎。
+- 模型路由。
+- SQLite 审计日志。
+- 产物存储。
 
-Plugins:
+插件：
 
 - `screen.capture`
 - `window.list`
@@ -499,74 +497,73 @@ Plugins:
 - `spreadsheet.read`
 - `email.draft`
 
-### Excluded
+### 排除
 
 - `email.send`
-- Permanent `file.delete`
+- 永久 `file.delete`
 - `shell.exec`
-- Payment, purchase, and form submission automation.
-- Background silent control.
-- Plugin marketplace.
-- Team collaboration.
-- Remote computer control.
-- Enterprise admin console.
-- Local models.
+- 支付、购买和表单提交自动化。
+- 后台静默控制。
+- 插件市场。
+- 团队协作。
+- 远程电脑控制。
+- 企业管理控制台。
+- 本地模型。
 
-## First End-To-End Workflows
+## 第一批端到端工作流
 
-### Organize Downloads
+### 整理 Downloads
 
-Scan `Downloads`, classify invoices, contracts, images, archives, and other files. Generate move and rename suggestions. After approval, execute moves and keep a rollback plan.
+扫描 `Downloads`，分类发票、合同、图片、压缩包和其他文件。生成移动与重命名建议。用户审批后执行移动，并保留回滚计划。
 
-### Process Office Document
+### 处理办公文档
 
-Read a PDF or spreadsheet, summarize it, extract key information, and export Markdown or CSV artifacts.
+读取 PDF 或电子表格，生成摘要，提取关键信息，并导出 Markdown 或 CSV 产物。
 
-### Operate Desktop App
+### 操作桌面应用
 
-Open an app, use screenshots to perform simple steps, input text, and save a file. Sending, deleting, submitting, or payment-like operations must stop for approval.
+打开应用，使用截图完成简单步骤，输入文本并保存文件。发送、删除、提交或类似支付的操作必须停下等待审批。
 
-## Test Standards
+## 测试标准
 
-Reliability:
+可靠性：
 
-- File workflow handles at least 100 files.
-- Move and rename actions are accurate and reversible.
-- PDF and spreadsheet failures do not block the entire task.
-- Desktop actions have post-action screenshot verification.
-- Tasks can pause and cancel cleanly.
+- 文件工作流至少能处理 100 个文件。
+- 移动和重命名动作准确且可回滚。
+- PDF 和表格失败不会阻塞整个任务。
+- 桌面动作具有操作后截图验证。
+- 任务可以干净地暂停和取消。
 
-Safety:
+安全性：
 
-- High and critical actions require approval.
-- `file.delete`, `email.send`, and `shell.exec` are disabled in MVP.
-- Password and verification-code fields deny automatic input.
-- Cloud model calls are logged with data summaries.
+- 高风险和严重风险动作需要审批。
+- `file.delete`、`email.send` 和 `shell.exec` 在 MVP 中禁用。
+- 密码和验证码字段拒绝自动输入。
+- 云端模型调用记录数据摘要。
 
-User experience:
+用户体验：
 
-- User understands the current plan.
-- Approval dialogs explain risk and impact.
-- End summaries show results, failures, cloud-data disclosure, and rollback options.
-- Missing OS permissions have clear guidance.
+- 用户能理解当前计划。
+- 审批弹窗说明风险和影响。
+- 结束摘要展示结果、失败项、云端数据披露和回滚选项。
+- 缺少操作系统权限时有清晰指引。
 
-Extensibility:
+可扩展性：
 
-- New plugins do not require Agent Runtime changes.
-- New agents can reuse existing plugins and the Policy Engine.
-- New model providers can be added through the Model Router.
+- 新插件不需要修改 Agent Runtime。
+- 新智能体可以复用现有插件和策略引擎。
+- 新模型供应商可以通过 Model Router 添加。
 
-## Technical Recommendation
+## 技术建议
 
-Use:
+采用：
 
-- Tauri 2 as the desktop shell.
-- React and TypeScript for UI.
-- TypeScript for agent/runtime orchestration where possible.
-- Rust for Tauri commands, OS permissions, and platform adapters.
-- SQLite for local persistence.
-- Zod or JSON Schema for plugin input and output schemas.
-- Provider adapters for cloud model APIs.
+- Tauri 2 作为桌面外壳。
+- React 和 TypeScript 构建 UI。
+- 尽可能用 TypeScript 编排智能体和运行时。
+- Rust 负责 Tauri 命令、系统权限和平台适配层。
+- SQLite 负责本地持久化。
+- Zod 或 JSON Schema 定义插件输入输出 schema。
+- 供应商适配器接入云端模型 API。
 
-This balances cross-platform support, security boundaries, app size, and development speed.
-
+该方案平衡跨平台支持、安全边界、应用体积和开发速度。

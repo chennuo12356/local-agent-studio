@@ -12,7 +12,7 @@ export function createInitialPlan(prompt: string): PlanStep[] {
     return [
       {
         id: "process-office-document",
-        title: "Process office document",
+        title: "处理办公文档",
         agentId: "office",
         toolCalls: [
           {
@@ -34,7 +34,7 @@ export function createInitialPlan(prompt: string): PlanStep[] {
     return [
       {
         id: "scan-files",
-        title: "Scan candidate files",
+        title: "扫描候选文件",
         agentId: "file",
         toolCalls: [
           {
@@ -51,7 +51,7 @@ export function createInitialPlan(prompt: string): PlanStep[] {
       },
       {
         id: "move-files",
-        title: "Move approved files",
+        title: "移动已批准的文件",
         agentId: "file",
         toolCalls: [
           {
@@ -72,7 +72,7 @@ export function createInitialPlan(prompt: string): PlanStep[] {
   return [
     {
       id: "operate-desktop",
-      title: "Inspect desktop and propose next action",
+      title: "检查桌面并提出下一步操作",
       agentId: "desktop",
       toolCalls: [
         {
@@ -99,22 +99,34 @@ function isFilePrompt(promptTokens: Set<string>): boolean {
     "contract",
     "contracts",
     "file",
-    "files"
+    "files",
+    "下载",
+    "文件",
+    "发票",
+    "合同"
   ]);
 }
 
 function isOfficePrompt(promptTokens: Set<string>): boolean {
-  return hasAnyToken(promptTokens, ["pdf", "spreadsheet", "excel", "csv"]);
+  return hasAnyToken(promptTokens, ["pdf", "spreadsheet", "excel", "csv", "表格", "文档"]);
 }
 
 function isSpreadsheetPrompt(promptTokens: Set<string>): boolean {
-  return hasAnyToken(promptTokens, ["spreadsheet", "excel", "csv"]);
+  return hasAnyToken(promptTokens, ["spreadsheet", "excel", "csv", "表格"]);
 }
 
 function hasAnyToken(promptTokens: Set<string>, keywords: string[]): boolean {
-  return keywords.some((keyword) => promptTokens.has(keyword));
+  return keywords.some((keyword) =>
+    promptTokens.has(keyword) ||
+    (containsHan(keyword) &&
+      [...promptTokens].some((token) => token.includes(keyword)))
+  );
 }
 
 function tokenizePrompt(prompt: string): Set<string> {
-  return new Set(prompt.match(/[a-z0-9]+/g) ?? []);
+  return new Set(prompt.match(/[\p{Script=Han}]+|[a-z0-9]+/gu) ?? []);
+}
+
+function containsHan(value: string): boolean {
+  return /\p{Script=Han}/u.test(value);
 }

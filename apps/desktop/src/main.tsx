@@ -7,7 +7,7 @@ import "./styles.css";
 const rootElement = document.getElementById("root");
 
 if (rootElement === null) {
-  throw new Error("Root element not found");
+  throw new Error("未找到根元素");
 }
 
 createRoot(rootElement).render(

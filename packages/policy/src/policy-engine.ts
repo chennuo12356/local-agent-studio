@@ -36,42 +36,53 @@ export function evaluateToolCall(call: PolicyInput): PolicyResult {
   if (disabledCriticalPluginIds.has(call.pluginId)) {
     return {
       decision: "deny",
-      reason: `${call.pluginId} is disabled by policy`
+      reason: `${call.pluginId} 已被策略禁用`
     };
   }
 
   if (call.pluginId === "keyboard.type" && isSensitiveKeyboardInput(call.input)) {
     return {
       decision: "deny",
-      reason: "keyboard input into password or verification fields is denied"
+      reason: "禁止向密码或验证码字段自动输入"
     };
   }
 
   if (call.pluginId === "mouse.click" && hasSensitiveVisibleText(call.input)) {
     return {
       decision: "require_approval",
-      reason: "mouse click on sensitive visible text requires approval"
+      reason: "点击敏感可见文本需要审批"
     };
   }
 
   if (call.riskLevel === "high") {
     return {
       decision: "require_approval",
-      reason: "high risk tool call requires approval"
+      reason: "高风险工具调用需要审批"
     };
   }
 
   if (call.riskLevel === "critical") {
     return {
       decision: "require_approval",
-      reason: "critical risk tool call requires approval"
+      reason: "严重风险工具调用需要审批"
     };
   }
 
   return {
     decision: "allow",
-    reason: `${call.riskLevel} risk tool call is allowed`
+    reason: `${formatRiskLevel(call.riskLevel)}风险工具调用已允许`
   };
+}
+
+function formatRiskLevel(riskLevel: RiskLevel): string {
+  const riskLabels: Record<RiskLevel, string> = {
+    low: "低",
+    medium: "中",
+    high: "高",
+    critical: "严重"
+  };
+
+  return riskLabels[riskLevel];
 }
 
 function isSensitiveKeyboardInput(input: Record<string, unknown>): boolean {

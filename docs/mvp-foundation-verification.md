@@ -1,26 +1,28 @@
-# MVP Foundation Verification
+# MVP 基础验收说明
 
-## Typecheck
+以下命令均在仓库根目录执行。
 
-- Command: `pnpm typecheck`
-- Expected: All workspace packages pass TypeScript checks.
+## 类型检查
 
-## Tests
+- 命令：`pnpm typecheck`
+- 预期：所有 workspace 包都通过 TypeScript 检查。
 
-- Command: `pnpm test`
-- Expected: Shared, policy, plugins, model-router, agents, runtime, persistence, and desktop tests pass.
+## 自动化测试
 
-## Frontend Build
+- 命令：`pnpm test`
+- 预期：shared、policy、plugins、model-router、agents、runtime、persistence 和 desktop 测试全部通过。
 
-- Command: `pnpm --filter @local-agent/desktop build`
-- Expected: Vite builds the desktop frontend.
+## 前端构建
 
-## Manual UI Smoke Test
+- 命令：`pnpm --filter @local-agent/desktop build`
+- 预期：Vite 成功构建桌面前端。
 
-- Command: `pnpm dev`
-- Expected:
-  - App opens in the Vite dev server.
-  - `Local Agent Studio` heading is visible.
-  - Entering `organize Downloads invoices` and pressing `Create Plan` shows a file plan.
-  - Approval Queue shows `1 pending` with the high-risk move step.
-  - Entering `summarize this PDF` and pressing `Create Plan` shows an office document plan with no pending approvals.
+## 手动 UI 冒烟测试
+
+- 命令：`pnpm dev`
+- 预期：
+  - 应用在 Vite 开发服务器中打开。
+  - 页面显示 `本地智能体工作台` 标题。
+  - 输入 `整理 Downloads 里的发票` 并点击 `生成计划` 后显示文件整理计划。
+  - 审批队列显示 `1 项待审批`，并包含高风险移动文件步骤。
+  - 输入 `总结这个 PDF` 并点击 `生成计划` 后显示办公文档计划，且没有待审批项。

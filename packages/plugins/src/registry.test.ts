@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { builtinPlugins, createPluginRegistry } from "./index";
 
-describe("plugin registry", () => {
-  it("registers MVP plugin metadata", () => {
+describe("插件注册表", () => {
+  it("注册 MVP 插件元数据", () => {
     const registry = createPluginRegistry(builtinPlugins);
 
     expect(registry.get("file.scan")?.riskLevel).toBe("low");
@@ -22,7 +22,7 @@ describe("plugin registry", () => {
     });
   });
 
-  it("includes schema metadata for every built-in plugin", () => {
+  it("每个内置插件都包含 schema 元数据", () => {
     expect(builtinPlugins.length).toBeGreaterThan(0);
 
     for (const plugin of builtinPlugins) {
@@ -31,9 +31,9 @@ describe("plugin registry", () => {
     }
   });
 
-  it("throws on duplicate plugin ids", () => {
+  it("遇到重复插件 id 时抛出错误", () => {
     expect(() => createPluginRegistry([builtinPlugins[0], builtinPlugins[0]])).toThrow(
-      "Duplicate plugin id"
+      "插件 id 重复"
     );
   });
 });
