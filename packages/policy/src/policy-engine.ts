@@ -1,4 +1,10 @@
-import type { ApprovalDecision, ToolCall } from "@local-agent/shared";
+import type { ApprovalDecision, RiskLevel } from "@local-agent/shared";
+
+export type PolicyInput = {
+  pluginId: string;
+  riskLevel: RiskLevel;
+  input: Record<string, unknown>;
+};
 
 export type PolicyResult = {
   decision: ApprovalDecision;
@@ -26,7 +32,7 @@ const sensitiveMouseLabels = [
   "安装"
 ];
 
-export function evaluateToolCall(call: ToolCall): PolicyResult {
+export function evaluateToolCall(call: PolicyInput): PolicyResult {
   if (disabledCriticalPluginIds.has(call.pluginId)) {
     return {
       decision: "deny",

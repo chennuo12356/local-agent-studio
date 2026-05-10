@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { ToolCall } from "@local-agent/shared";
+import type { PolicyInput } from "./policy-engine";
 import { evaluateToolCall } from "./policy-engine";
 
-function toolCall(overrides: Partial<ToolCall>): ToolCall {
+function toolCall(overrides: Partial<PolicyInput>): PolicyInput {
   return {
-    id: "call-1",
     pluginId: "notes.read",
     input: {},
     riskLevel: "low",
-    approvalRequired: false,
     ...overrides
   };
 }
