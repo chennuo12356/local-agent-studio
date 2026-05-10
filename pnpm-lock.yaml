@@ -41,6 +41,12 @@ importers:
 
   packages/model-router: {}
 
+  packages/persistence:
+    dependencies:
+      '@local-agent/shared':
+        specifier: workspace:*
+        version: link:../shared
+
   packages/plugins:
     dependencies:
       '@local-agent/shared':
