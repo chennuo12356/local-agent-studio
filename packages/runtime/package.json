@@ -13,6 +13,7 @@
   "dependencies": {
     "@local-agent/agents": "workspace:*",
     "@local-agent/policy": "workspace:*",
+    "@local-agent/plugins": "workspace:*",
     "@local-agent/shared": "workspace:*"
   }
 }

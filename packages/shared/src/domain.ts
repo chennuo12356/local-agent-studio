@@ -84,6 +84,8 @@ export type ToolPlugin = {
   name: string;
   description: string;
   permissions: Permission[];
+  inputSchema: unknown;
+  outputSchema: unknown;
   riskLevel: RiskLevel;
   reversible: boolean;
 };

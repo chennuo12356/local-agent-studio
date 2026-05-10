@@ -9,15 +9,14 @@ import {
   useState
 } from "react";
 
-const defaultTask =
-  "Organize my Downloads folder and ask before moving important files.";
-type TaskRun = ReturnType<ReturnType<typeof createRuntime>["createTask"]>;
+const defaultTask = "organize Downloads invoices";
+type TaskRun = ReturnType<ReturnType<typeof createRuntime>["startTask"]>;
 
 export function App(): ReactElement {
   const runtime = useMemo(() => createRuntime(), []);
   const [taskPrompt, setTaskPrompt] = useState(defaultTask);
   const [taskRun, setTaskRun] = useState<TaskRun>(() =>
-    runtime.createTask(defaultTask)
+    runtime.startTask(defaultTask)
   );
 
   const approvalSteps = taskRun.plan.filter((step) => step.approvalRequired);
@@ -30,7 +29,7 @@ export function App(): ReactElement {
       return;
     }
 
-    setTaskRun(runtime.createTask(prompt));
+    setTaskRun(runtime.startTask(prompt));
   }
 
   return createElement(

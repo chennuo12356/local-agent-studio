@@ -37,6 +37,121 @@ describe("agent runtime", () => {
     expect(taskRun.status).toBe("completed");
   });
 
+  it("uses canonical plugin risk instead of planner-supplied risk", async () => {
+    vi.doMock("@local-agent/agents", () => ({
+      createInitialPlan: (): PlanStep[] => [
+        {
+          id: "move-files",
+          title: "Move files",
+          agentId: "file",
+          toolCalls: [
+            {
+              id: "move-files-call",
+              pluginId: "file.move",
+              input: {},
+              riskLevel: "low",
+              approvalRequired: false
+            }
+          ],
+          riskLevel: "low",
+          approvalRequired: false,
+          status: "pending"
+        }
+      ]
+    }));
+
+    const { createRuntime } = await import("./runtime");
+    const runtime = createRuntime();
+
+    const taskRun = runtime.startTask("organize Downloads invoices");
+
+    expect(taskRun.status).toBe("waiting_approval");
+    expect(taskRun.plan[0]).toMatchObject({
+      riskLevel: "high",
+      approvalRequired: true,
+      toolCalls: [
+        {
+          pluginId: "file.move",
+          riskLevel: "high",
+          approvalRequired: true
+        }
+      ]
+    });
+  });
+
+  it("fails when a planned tool call references an unknown plugin", async () => {
+    vi.doMock("@local-agent/agents", () => ({
+      createInitialPlan: (): PlanStep[] => [
+        {
+          id: "unknown-plugin-step",
+          title: "Unknown plugin step",
+          agentId: "desktop",
+          toolCalls: [
+            {
+              id: "unknown-plugin-call",
+              pluginId: "desktop.unknown",
+              input: {},
+              riskLevel: "low",
+              approvalRequired: false
+            }
+          ],
+          riskLevel: "low",
+          approvalRequired: false,
+          status: "pending"
+        }
+      ]
+    }));
+
+    const { createRuntime } = await import("./runtime");
+    const runtime = createRuntime();
+
+    const taskRun = runtime.startTask("use unknown plugin");
+
+    expect(taskRun.status).toBe("failed");
+  });
+
+  it("reflects contextual policy approvals into the returned plan", async () => {
+    vi.doMock("@local-agent/agents", () => ({
+      createInitialPlan: (): PlanStep[] => [
+        {
+          id: "submit-payment",
+          title: "Submit payment",
+          agentId: "desktop",
+          toolCalls: [
+            {
+              id: "submit-payment-call",
+              pluginId: "mouse.click",
+              input: { visibleText: "Submit payment" },
+              riskLevel: "medium",
+              approvalRequired: false
+            }
+          ],
+          riskLevel: "medium",
+          approvalRequired: false,
+          status: "pending"
+        }
+      ]
+    }));
+
+    const { createRuntime } = await import("./runtime");
+    const runtime = createRuntime();
+
+    const taskRun = runtime.startTask("submit payment");
+
+    expect(taskRun.status).toBe("waiting_approval");
+    expect(taskRun.plan[0]).toMatchObject({
+      riskLevel: "medium",
+      approvalRequired: true,
+      toolCalls: [
+        {
+          pluginId: "mouse.click",
+          riskLevel: "medium",
+          approvalRequired: true
+        }
+      ]
+    });
+  });
+
   it("evaluates every planned tool call before deciding status", async () => {
     const evaluatedToolCallIds: string[] = [];
 

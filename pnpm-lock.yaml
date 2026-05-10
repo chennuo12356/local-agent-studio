@@ -95,6 +95,9 @@ importers:
       '@local-agent/agents':
         specifier: workspace:*
         version: link:../agents
+      '@local-agent/plugins':
+        specifier: workspace:*
+        version: link:../plugins
       '@local-agent/policy':
         specifier: workspace:*
         version: link:../policy
