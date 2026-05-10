@@ -6,6 +6,8 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "pnpm --filter @local-agent/desktop dev",
+    "dev:web": "pnpm --filter @local-agent/desktop dev",
+    "dev:desktop": "pnpm --filter @local-agent/desktop tauri dev",
     "build": "pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",
