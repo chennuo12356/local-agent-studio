@@ -76,9 +76,16 @@ export function evaluateToolCall(call: PolicyInput): PolicyResult {
 
 function isSensitiveKeyboardInput(input: Record<string, unknown>): boolean {
   const fieldRole = stringValue(input.fieldRole).toLowerCase();
-  const label = stringValue(input.label);
+  const label = stringValue(input.label).toLowerCase();
 
-  return fieldRole.includes("password") || fieldRole.includes("verification") || label.includes("验证码");
+  return (
+    fieldRole.includes("password") ||
+    fieldRole.includes("verification") ||
+    label.includes("password") ||
+    label.includes("verification") ||
+    label.includes("otp") ||
+    label.includes("验证码")
+  );
 }
 
 function hasSensitiveVisibleText(input: Record<string, unknown>): boolean {

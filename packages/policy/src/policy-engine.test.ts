@@ -59,4 +59,18 @@ describe("policy engine", () => {
 
     expect(result.decision).toBe("deny");
   });
+
+  it("denies keyboard typing into sensitive labeled fields", () => {
+    for (const label of ["Password", "Verification code", "OTP"]) {
+      expect(
+        evaluateToolCall(
+          toolCall({
+            pluginId: "keyboard.type",
+            input: { label },
+            riskLevel: "low"
+          })
+        ).decision
+      ).toBe("deny");
+    }
+  });
 });
