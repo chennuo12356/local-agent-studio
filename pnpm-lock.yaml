@@ -53,6 +53,18 @@ importers:
         specifier: workspace:*
         version: link:../shared
 
+  packages/runtime:
+    dependencies:
+      '@local-agent/agents':
+        specifier: workspace:*
+        version: link:../agents
+      '@local-agent/policy':
+        specifier: workspace:*
+        version: link:../policy
+      '@local-agent/shared':
+        specifier: workspace:*
+        version: link:../shared
+
   packages/shared: {}
 
 packages:
