@@ -10,10 +10,14 @@ export function createMemoryAuditStore(): AuditStore {
 
   return {
     async appendEvent(event: TaskEvent): Promise<void> {
-      events.push(event);
+      events.push(cloneTaskEvent(event));
     },
     async listEvents(taskId: string): Promise<TaskEvent[]> {
-      return events.filter((event) => event.taskId === taskId);
+      return events.filter((event) => event.taskId === taskId).map(cloneTaskEvent);
     }
   };
+}
+
+function cloneTaskEvent(event: TaskEvent): TaskEvent {
+  return { ...event };
 }
