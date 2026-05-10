@@ -1,4 +1,6 @@
-export type ModelPurpose = "planning" | "text" | "vision" | string;
+export type KnownModelPurpose = "planning" | "text" | "vision";
+
+export type ModelPurpose = KnownModelPurpose | (string & {});
 
 export interface ModelRouterConfig {
   planning: string;
