@@ -17,14 +17,22 @@ export function createRuntime(): AgentRuntime {
       const policyDecisions = taskRun.plan.flatMap((step) =>
         step.toolCalls.map((toolCall) => evaluateToolCall(toolCall).decision)
       );
+      const hasDeniedDecision = policyDecisions.some(
+        (decision) => decision === "deny"
+      );
       const needsApproval = policyDecisions.some(
         (decision) => decision === "require_approval"
       );
+      const status = hasDeniedDecision
+        ? "failed"
+        : needsApproval
+          ? "waiting_approval"
+          : "completed";
 
       return {
         ...taskRun,
-        status: needsApproval ? "waiting_approval" : "completed",
-        completedAt: needsApproval ? undefined : new Date().toISOString()
+        status,
+        completedAt: status === "completed" ? new Date().toISOString() : undefined
       };
     }
   };

@@ -88,4 +88,35 @@ describe("agent runtime", () => {
     expect(taskRun.status).toBe("waiting_approval");
     expect(evaluatedToolCallIds).toEqual(["approval-call", "allowed-call"]);
   });
+
+  it("fails when any planned tool call is denied by policy", async () => {
+    vi.doMock("@local-agent/agents", () => ({
+      createInitialPlan: (): PlanStep[] => [
+        {
+          id: "delete-files",
+          title: "Delete files",
+          agentId: "file",
+          toolCalls: [
+            {
+              id: "delete-files-call",
+              pluginId: "file.delete",
+              input: {},
+              riskLevel: "critical",
+              approvalRequired: true
+            }
+          ],
+          riskLevel: "critical",
+          approvalRequired: true,
+          status: "pending"
+        }
+      ]
+    }));
+
+    const { createRuntime } = await import("./runtime");
+    const runtime = createRuntime();
+
+    const taskRun = runtime.startTask("delete Downloads");
+
+    expect(taskRun.status).toBe("failed");
+  });
 });
