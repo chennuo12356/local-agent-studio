@@ -22,5 +22,5 @@
   - App opens in the Vite dev server.
   - `Local Agent Studio` heading is visible.
   - Entering `organize Downloads invoices` and pressing `Create Plan` shows a file plan.
-  - Approval Queue says approval required.
-  - Entering `summarize this PDF` and pressing `Create Plan` completes without approval.
+  - Approval Queue shows `1 pending` with the high-risk move step.
+  - Entering `summarize this PDF` and pressing `Create Plan` shows an office document plan with no pending approvals.
