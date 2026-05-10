@@ -44,6 +44,9 @@ importers:
       '@local-agent/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
+      '@local-agent/shared':
+        specifier: workspace:^
+        version: link:../../packages/shared
       '@tauri-apps/api':
         specifier: ^2.2.0
         version: 2.11.0
