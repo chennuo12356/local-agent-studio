@@ -14,10 +14,11 @@ export function createRuntime(): AgentRuntime {
     },
     startTask(prompt: string): TaskRun {
       const taskRun = createPlannedTaskRun(prompt);
-      const needsApproval = taskRun.plan.some((step) =>
-        step.toolCalls.some(
-          (toolCall) => evaluateToolCall(toolCall).decision === "require_approval"
-        )
+      const policyDecisions = taskRun.plan.flatMap((step) =>
+        step.toolCalls.map((toolCall) => evaluateToolCall(toolCall).decision)
+      );
+      const needsApproval = policyDecisions.some(
+        (decision) => decision === "require_approval"
       );
 
       return {
