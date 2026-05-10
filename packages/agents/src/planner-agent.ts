@@ -2,8 +2,35 @@ import type { PlanStep } from "@local-agent/shared";
 
 export function createInitialPlan(prompt: string): PlanStep[] {
   const normalizedPrompt = prompt.toLowerCase();
+  const promptTokens = tokenizePrompt(normalizedPrompt);
 
-  if (isFilePrompt(normalizedPrompt)) {
+  if (isOfficePrompt(promptTokens)) {
+    const pluginId = isSpreadsheetPrompt(promptTokens)
+      ? "spreadsheet.read"
+      : "pdf.extract";
+
+    return [
+      {
+        id: "process-office-document",
+        title: "Process office document",
+        agentId: "office",
+        toolCalls: [
+          {
+            id: "read-document-call",
+            pluginId,
+            input: {},
+            riskLevel: "medium",
+            approvalRequired: false
+          }
+        ],
+        riskLevel: "medium",
+        approvalRequired: false,
+        status: "pending"
+      }
+    ];
+  }
+
+  if (isFilePrompt(promptTokens)) {
     return [
       {
         id: "scan-files",
@@ -42,32 +69,6 @@ export function createInitialPlan(prompt: string): PlanStep[] {
     ];
   }
 
-  if (isOfficePrompt(normalizedPrompt)) {
-    const pluginId = isSpreadsheetPrompt(normalizedPrompt)
-      ? "spreadsheet.read"
-      : "pdf.extract";
-
-    return [
-      {
-        id: "process-office-document",
-        title: "Process office document",
-        agentId: "office",
-        toolCalls: [
-          {
-            id: "read-document-call",
-            pluginId,
-            input: {},
-            riskLevel: "medium",
-            approvalRequired: false
-          }
-        ],
-        riskLevel: "medium",
-        approvalRequired: false,
-        status: "pending"
-      }
-    ];
-  }
-
   return [
     {
       id: "operate-desktop",
@@ -89,18 +90,31 @@ export function createInitialPlan(prompt: string): PlanStep[] {
   ];
 }
 
-function isFilePrompt(prompt: string): boolean {
-  return ["download", "invoice", "contract", "file"].some((keyword) =>
-    prompt.includes(keyword)
-  );
+function isFilePrompt(promptTokens: Set<string>): boolean {
+  return hasAnyToken(promptTokens, [
+    "download",
+    "downloads",
+    "invoice",
+    "invoices",
+    "contract",
+    "contracts",
+    "file",
+    "files"
+  ]);
 }
 
-function isOfficePrompt(prompt: string): boolean {
-  return ["pdf", "spreadsheet", "excel", "csv"].some((keyword) =>
-    prompt.includes(keyword)
-  );
+function isOfficePrompt(promptTokens: Set<string>): boolean {
+  return hasAnyToken(promptTokens, ["pdf", "spreadsheet", "excel", "csv"]);
 }
 
-function isSpreadsheetPrompt(prompt: string): boolean {
-  return ["spreadsheet", "excel", "csv"].some((keyword) => prompt.includes(keyword));
+function isSpreadsheetPrompt(promptTokens: Set<string>): boolean {
+  return hasAnyToken(promptTokens, ["spreadsheet", "excel", "csv"]);
+}
+
+function hasAnyToken(promptTokens: Set<string>, keywords: string[]): boolean {
+  return keywords.some((keyword) => promptTokens.has(keyword));
+}
+
+function tokenizePrompt(prompt: string): Set<string> {
+  return new Set(prompt.match(/[a-z0-9]+/g) ?? []);
 }

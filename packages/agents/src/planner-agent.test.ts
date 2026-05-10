@@ -22,4 +22,16 @@ describe("planner agent", () => {
     expect(createInitialPlan("summarize this PDF")[0]?.agentId).toBe("office");
     expect(createInitialPlan("read this spreadsheet")[0]?.agentId).toBe("office");
   });
+
+  it("routes mixed office and file prompts to the office agent", () => {
+    expect(createInitialPlan("summarize this PDF file")[0]?.agentId).toBe("office");
+  });
+
+  it("does not route file substring false positives to the file agent", () => {
+    expect(createInitialPlan("update my profile")[0]?.agentId).toBe("desktop");
+  });
+
+  it("routes prompts without agent keywords to the desktop agent", () => {
+    expect(createInitialPlan("open notes app")[0]?.agentId).toBe("desktop");
+  });
 });
