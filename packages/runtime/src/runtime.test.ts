@@ -234,4 +234,56 @@ describe("智能体运行时", () => {
 
     expect(taskRun.status).toBe("failed");
   });
+
+  it("以事件流运行会话回合并输出助手内容", async () => {
+    const { createRuntime } = await import("./runtime");
+    const runtime = createRuntime();
+
+    const events = [];
+    for await (const event of runtime.runConversationTurn({
+      conversationId: "conversation-1",
+      userMessageId: "message-user-1",
+      assistantMessageId: "message-assistant-1",
+      prompt: "总结这个 PDF",
+      selectedAgent: "planner"
+    })) {
+      events.push(event);
+    }
+
+    expect(events.map((event) => event.type)).toContain("turn.started");
+    expect(events.map((event) => event.type)).toContain("message.delta");
+    expect(events.map((event) => event.type)).toContain("tool.started");
+    expect(events.map((event) => event.type)).toContain("tool.completed");
+    expect(events.at(-1)).toMatchObject({ type: "turn.completed" });
+    expect(
+      events
+        .filter((event) => event.type === "message.delta")
+        .map((event) => event.delta)
+        .join("")
+    ).toContain("总结这个 PDF");
+  });
+
+  it("会话事件流暴露需要审批的工具调用", async () => {
+    const { createRuntime } = await import("./runtime");
+    const runtime = createRuntime();
+
+    const events = [];
+    for await (const event of runtime.runConversationTurn({
+      conversationId: "conversation-1",
+      userMessageId: "message-user-1",
+      assistantMessageId: "message-assistant-1",
+      prompt: "整理 Downloads 里的发票",
+      selectedAgent: "planner"
+    })) {
+      events.push(event);
+    }
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "approval.required",
+        riskLevel: "high"
+      })
+    );
+    expect(events.at(-1)).toMatchObject({ type: "turn.completed" });
+  });
 });
